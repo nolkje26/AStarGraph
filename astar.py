@@ -74,13 +74,16 @@ class Vertex:
     # Check if you can add neighbor vertices to neighbors list - append to neighbors if vertex is w/in bounds and is not a barrier
     def update_neighbors(self, grid):
         self.neighbors = []
-        if self.row < self.total_rows - 1 and not grid[self.row + 1][self.col].is_barrier(): # Down
+        if self.row < self.total_rows - 1 and not grid[self.row + 1][self.col].is_barrier(): # DOWN
             self.neighbors.append(grid[self.row + 1][self.col])
-        elif self.row > 0 and not grid[self.row - 1][self.col].is_barrier(): # Up
+
+        if self.row > 0 and not grid[self.row - 1][self.col].is_barrier(): # UP
             self.neighbors.append(grid[self.row - 1][self.col])
-        elif self.col < self.total_rows and not grid[self.row][self.col + 1].is_barrier(): # Right
-            self.neighbors.append(grid[self.row + 1][self.col])
-        elif self.col > 0 and not grid[self.row][self.col - 1].is_barrier(): # Left
+
+        if self.col < self.total_rows - 1 and not grid[self.row][self.col + 1].is_barrier(): # RIGHT
+            self.neighbors.append(grid[self.row][self.col + 1])
+
+        if self.col > 0 and not grid[self.row][self.col - 1].is_barrier(): # LEFT
             self.neighbors.append(grid[self.row][self.col - 1])
 
     def __lt__(self, other):
@@ -92,18 +95,11 @@ def h(v1, v2): # v1 and v2 will be coordinates (x1, y1) and (x2, y2)
     x2, y2 = v2
     return abs(x1 - x2) + abs(y1 - y2)
 
-def reconstruct_path(edge_to, curr_vertex, draw):
-    while curr_vertex in edge_to:
-        curr_vertex = edge_to[curr_vertex]
-        curr_vertex.make_path()
-        draw()
-
 def a_star_algorithm(draw, grid, start, end):
     fringe = MinPriorityQueue()
     dist_to = {vertex: float("inf") for row in grid for vertex in row}
     edge_to = {}
-    heuristic = {vertex: float("inf") for row in grid for vertex in row}
-    visited = {}
+    heuristic = {vertex: float("inf") for row in grid for vertex in row} 
 
     fringe.enqueue(start, 0) # add source with 0 priority
     dist_to[start] = 0
@@ -115,26 +111,28 @@ def a_star_algorithm(draw, grid, start, end):
             if event.type == pygame.QUIT:
                 pygame.quit()
 
-        if fringe.get_smallest() == end:
-            reconstruct_path(edge_to, end, draw)
+        if fringe.get_smallest().val == end:
+            curr_vertex = fringe.dequeue().val
+            while curr_vertex != start:
+                curr_vertex.make_path()
+                draw()
+                curr_vertex = edge_to[curr_vertex]
             end.make_end()
             return True
 
         curr_vertex = fringe.dequeue().val # gets smallest vertex
 
         for neighbor in curr_vertex.neighbors:
-            if neighbor not in visited:
-                temp_dist_to = dist_to[curr_vertex] + 1
-                if temp_dist_to < dist_to[neighbor]:
-                    dist_to[neighbor] = temp_dist_to
-                    if neighbor in fringe:
+            if not neighbor.is_visited():
+                temp_dist_to_neighbor = dist_to[curr_vertex] + 1
+                if temp_dist_to_neighbor < dist_to[neighbor]:
+                    dist_to[neighbor] = temp_dist_to_neighbor
+                    if neighbor in fringe.values:
                         heuristic[neighbor] = dist_to[neighbor] + h(neighbor.get_pos(), end.get_pos())
                     else:
                         fringe.enqueue(neighbor, dist_to[neighbor] + h(neighbor.get_pos(), end.get_pos()))
-                        neighbor.make_enqueued()
+                    neighbor.make_enqueued()
                     edge_to[neighbor] = curr_vertex
-
-        visited.add(curr_vertex)
 
         draw()
 
@@ -188,6 +186,7 @@ def main(window, width):
 
     while run: 
         draw(window, grid, ROWS, width)
+
         for event in pygame.event.get(): # loop through all the events 
             if event.type == pygame.QUIT:
                 run = False

@@ -17,7 +17,7 @@ class MinPriorityQueue:
             parentIdx = math.floor((idx - 1)/2)
             parent = self.values[parentIdx]
 
-            if element.prioirty >= parent.priority:
+            if element.priority >= parent.priority:
                 break
             self.values[parentIdx] = element
             self.values[idx] = parent
@@ -36,7 +36,7 @@ class MinPriorityQueue:
 
     def sink_down(self):
         idx = 0
-        length = self.values.len
+        length = len(self.values)
         element = self.values[0]
         while(True):
             left_child_idx = 2 * idx + 1
@@ -49,7 +49,7 @@ class MinPriorityQueue:
                     swap = left_child_idx
             if right_child_idx < length:
                 right_child = self.values[right_child_idx]
-                if (not swap and right_child.priority < element.prioirty) or (swap and right_child.priority < left_child.priority):
+                if (not swap and right_child.priority < element.priority) or (swap and right_child.priority < left_child.priority):
                     swap = right_child_idx
 
             if (not swap):
