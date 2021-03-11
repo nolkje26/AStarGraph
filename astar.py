@@ -6,16 +6,14 @@ WINDOW = pygame.display.set_mode((WIDTH, WIDTH)) # Sets up display w/ dimensions
 pygame.display.set_caption("A* Path Finding Algorithm") # Sets caption for display
 
 # Grid colors
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
+ORANGE_YELLOW_CRAYOLA = (233, 196, 106)
+SANDY_BROWN = (244, 162, 97)
 WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-PURPLE = (128, 0, 128)
-ORANGE = (255, 165, 0)
+PERSIAN_GREEN = (42, 157, 143)
+CHARCOAL = (38, 70, 83)
+BURNT_SIENNA = (231, 111, 81)
 GREY = (128, 128, 128)
-TURQUOISE = (64, 224, 208)
+CG_BLUE = (0, 129, 167)
 
 class Vertex:
     def __init__(self, row, col, width, total_rows):
@@ -32,40 +30,40 @@ class Vertex:
         return self.row, self.col
     
     def is_visited(self):
-        return self.color == RED
+        return self.color == ORANGE_YELLOW_CRAYOLA
     
     def is_enqueued(self):
-        return self.color == GREEN
+        return self.color == SANDY_BROWN
     
     def is_barrier(self):
-        return self.color == BLACK
+        return self.color == CHARCOAL
 
     def is_start(self):
-        return self.color == ORANGE
+        return self.color == BURNT_SIENNA
 
     def is_end(self):
-        return self.color == TURQUOISE
+        return self.color == CG_BLUE
     
     def reset(self):
         self.color = WHITE
 
     def make_visited(self):
-        self.color = RED
+        self.color = ORANGE_YELLOW_CRAYOLA
     
     def make_enqueued(self):
-        self.color = GREEN
+        self.color = SANDY_BROWN
 
     def make_barrier(self):
-        self.color = BLACK
+        self.color = CHARCOAL
 
     def make_start(self):
-        self.color = ORANGE
+        self.color = BURNT_SIENNA
 
     def make_end(self):
-        self.color = TURQUOISE
+        self.color = CG_BLUE
 
     def make_path(self):
-        self.color = PURPLE
+        self.color = PERSIAN_GREEN
 
     # Draws actual vertex on screen
     def draw(self, window):
@@ -73,16 +71,12 @@ class Vertex:
 
     # Check if you can add neighbor vertices to neighbors list - append to neighbors if vertex is w/in bounds and is not a barrier
     def update_neighbors(self, grid):
-        self.neighbors = []
         if self.row < self.total_rows - 1 and not grid[self.row + 1][self.col].is_barrier(): # DOWN
             self.neighbors.append(grid[self.row + 1][self.col])
-
         if self.row > 0 and not grid[self.row - 1][self.col].is_barrier(): # UP
             self.neighbors.append(grid[self.row - 1][self.col])
-
         if self.col < self.total_rows - 1 and not grid[self.row][self.col + 1].is_barrier(): # RIGHT
             self.neighbors.append(grid[self.row][self.col + 1])
-
         if self.col > 0 and not grid[self.row][self.col - 1].is_barrier(): # LEFT
             self.neighbors.append(grid[self.row][self.col - 1])
 
@@ -94,6 +88,17 @@ def h(v1, v2): # v1 and v2 will be coordinates (x1, y1) and (x2, y2)
     x1, y1 = v1
     x2, y2 = v2
     return abs(x1 - x2) + abs(y1 - y2)
+
+def relax(dist_to, edge_to, fringe, end, curr_vertex, neighbor):
+    temp_dist_to_neighbor = dist_to[curr_vertex] + 1
+    if temp_dist_to_neighbor < dist_to[neighbor]:
+        dist_to[neighbor] = temp_dist_to_neighbor
+        if neighbor in fringe.values:
+            heuristic[neighbor] = dist_to[neighbor] + h(neighbor.get_pos(), end.get_pos())
+        else:
+            fringe.enqueue(neighbor, dist_to[neighbor] + h(neighbor.get_pos(), end.get_pos()))
+        neighbor.make_enqueued()
+        edge_to[neighbor] = curr_vertex
 
 def a_star_algorithm(draw, grid, start, end):
     fringe = MinPriorityQueue()
@@ -124,15 +129,7 @@ def a_star_algorithm(draw, grid, start, end):
 
         for neighbor in curr_vertex.neighbors:
             if not neighbor.is_visited():
-                temp_dist_to_neighbor = dist_to[curr_vertex] + 1
-                if temp_dist_to_neighbor < dist_to[neighbor]:
-                    dist_to[neighbor] = temp_dist_to_neighbor
-                    if neighbor in fringe.values:
-                        heuristic[neighbor] = dist_to[neighbor] + h(neighbor.get_pos(), end.get_pos())
-                    else:
-                        fringe.enqueue(neighbor, dist_to[neighbor] + h(neighbor.get_pos(), end.get_pos()))
-                    neighbor.make_enqueued()
-                    edge_to[neighbor] = curr_vertex
+                relax(dist_to, edge_to, fringe, end, curr_vertex, neighbor)
 
         draw()
 
